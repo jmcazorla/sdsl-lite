@@ -477,7 +477,7 @@ class wm_int
 
         std::vector<range_type> left_ranges, right_ranges;
         auto child = my_expand_ranges(v, ranges, left_ranges, right_ranges);
-        size_type mid = ((sigma_range[0] + sigma_range[1])>>1)+1;
+        size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
         uint64_t p = -1ULL;
         if (c < mid && !left_ranges.empty()) {
             p = select_next_ranges_node(child[0], left_ranges, {sigma_range[0], mid-1}, c);
@@ -548,7 +548,7 @@ class wm_int
         range_type left_range, right_range;
         auto child = my_expand(v, range, left_range, right_range, rank_b);
         uint64_t lp = -1ULL, rp = -1ULL;
-        size_type mid = ((sigma_range[0] + sigma_range[1])>>1)+1;
+        size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
         uint lstate, rstate;
 
         if (!sdsl::empty(left_range)) {
@@ -637,7 +637,7 @@ class wm_int
         range_type left_range, right_range;
         auto child = my_expand(v, range, left_range, right_range, rank_b);
         std::pair<size_type, value_type> lp = {-1ULL, 0}, rp =  {-1ULL, 0};
-        size_type mid = ((sigma_range[0] + sigma_range[1])>>1)+1;
+        size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
         uint lstate, rstate;
 
         if (!sdsl::empty(left_range)) {
@@ -698,7 +698,7 @@ class wm_int
 
         std::vector<range_type> left_ranges, right_ranges;
         auto child = my_expand_ranges(v, ranges, left_ranges, right_ranges);
-        size_type mid = ((sigma_range[0] + sigma_range[1])>>1) +1;
+        size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
         if (!left_ranges.empty()) {
             return range_min_value_node(child[0], left_ranges, {sigma_range[0], mid-1});
         }else {
@@ -712,7 +712,7 @@ class wm_int
 
         std::vector<range_type> left_ranges, right_ranges;
         auto child = my_expand_ranges(v, ranges, left_ranges, right_ranges);
-        size_type mid = ((sigma_range[0] + sigma_range[1])>>1) +1;
+        size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
         if (!left_ranges.empty() && val < mid) {
             auto aux =  range_next_value_node(child[0], val, left_ranges, {sigma_range[0], mid-1});
             if (aux.first) return aux;
@@ -765,7 +765,7 @@ class wm_int
             range_type left_range, right_range;
             auto child =  my_expand(v, range,
                                                   left_range, right_range, rnk);
-            size_type mid = ((sigma_range[0] + sigma_range[1])>>1)+1;
+            size_type mid = sigma_range[0] + ((sigma_range[1] - sigma_range[0])>>1)+1;
             if(!sdsl::empty(left_range)){
                 range2d_values_node(child[0], left_range, sigma_ranges, {sigma_range[0], mid-1}, i_sr, res);
             }
@@ -1152,7 +1152,7 @@ class wm_int
                 rank_off[v.level] = m_tree_rank(is[v.level]);
             }
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1189,7 +1189,7 @@ class wm_int
             } 
               
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1250,7 +1250,7 @@ class wm_int
                 rank_off[v.level] = m_tree_rank(is[v.level]);
             }*/
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1307,7 +1307,7 @@ class wm_int
             }
             
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1396,7 +1396,7 @@ class wm_int
                 return answ;
             } 
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1458,7 +1458,7 @@ class wm_int
                 rank_off[v.level] = m_tree_rank(is[v.level]);
             }*/
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1508,7 +1508,7 @@ class wm_int
                 return get<0>(r); // cuidado con esto
             } 
             size_type irb = ilb + /*std::min(m_sigma-2,*/(size_type)(1ULL << (m_max_level-v.level))/*)*/;
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             /*std::cout << "[" << ilb << "," << std::min(irb,m_sigma-1) << "] versus [" << vlb << "," << vrb << "]" << std::endl;
             char c;
@@ -1567,7 +1567,7 @@ class wm_int
                 return get<0>(r); // cuidado con esto
             }
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1683,7 +1683,7 @@ class wm_int
                 rank_off[v.level] = m_tree_rank(is[v.level]);
             }
             size_type irb = ilb + (1ULL << (m_max_level-v.level));
-            size_type mid = (irb + ilb)>>1;
+            size_type mid = ilb + ((irb - ilb)>>1);
 
             auto c_v = expand(v);
             auto c_r = expand(v, r);
@@ -1811,7 +1811,7 @@ class wm_int
         }
 
         //Continue with children nodes
-        size_type mid = (irb + ilb)>>1;
+        size_type mid = ilb + ((irb - ilb)>>1);
         auto c_v = expand(v);
         auto c_r = expand(v, r);
 
