@@ -94,9 +94,9 @@ TYPED_TEST(sd_vector_test, get_uint64_128_256_fast)
     const uint128_t expected_256_high = static_cast<uint128_t>(expected_64_hi_hi) | (static_cast<uint128_t>(expected_64_hi_hi_hi) << 64);
     const uint256_t expected_256(expected_64, expected_64_hi, expected_256_high);
 
-    ASSERT_EQ(expected_64, sdv.get_uint64_fast(0));
-    ASSERT_EQ(expected_128, sdv.get_uint128_fast(0));
-    ASSERT_EQ(expected_256, sdv.get_uint256_fast(0));
+    ASSERT_EQ(expected_64, sdv.get_uint64(0));
+    ASSERT_EQ(expected_128, sdv.get_uint128(0));
+    ASSERT_EQ(expected_256, sdv.get_uint256(0));
 }
 
 TYPED_TEST(sd_vector_test, builder_empty_constructor)
