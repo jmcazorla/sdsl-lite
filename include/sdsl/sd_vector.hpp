@@ -395,6 +395,51 @@ class sd_vector
             return uint256_t(lo, mid, high);
         }
 
+        uint64_t get_uint64_fast(size_type idx) const
+        {
+            assert(idx + 64 <= m_size);
+            uint64_t res = 0;
+            for (uint8_t bit = 0; bit < 64; ++bit) {
+                res |= (static_cast<uint64_t>((*this)[idx + bit])) << bit;
+            }
+            return res;
+        }
+
+        uint128_t get_uint128_fast(size_type idx) const
+        {
+            assert(idx + 128 <= m_size);
+            uint64_t lo = 0;
+            uint64_t hi = 0;
+            for (uint8_t bit = 0; bit < 64; ++bit) {
+                const auto b0 = static_cast<uint64_t>((*this)[idx + bit]);
+                const auto b1 = static_cast<uint64_t>((*this)[idx + 64 + bit]);
+                lo |= (b0 << bit);
+                hi |= (b1 << bit);
+            }
+            return static_cast<uint128_t>(lo) | (static_cast<uint128_t>(hi) << 64);
+        }
+
+        uint256_t get_uint256_fast(size_type idx) const
+        {
+            assert(idx + 256 <= m_size);
+            uint64_t lo = 0;
+            uint64_t mid = 0;
+            uint64_t hi_lo = 0;
+            uint64_t hi_hi = 0;
+            for (uint8_t bit = 0; bit < 64; ++bit) {
+                const auto b0 = static_cast<uint64_t>((*this)[idx + bit]);
+                const auto b1 = static_cast<uint64_t>((*this)[idx + 64 + bit]);
+                const auto b2 = static_cast<uint64_t>((*this)[idx + 128 + bit]);
+                const auto b3 = static_cast<uint64_t>((*this)[idx + 192 + bit]);
+                lo |= (b0 << bit);
+                mid |= (b1 << bit);
+                hi_lo |= (b2 << bit);
+                hi_hi |= (b3 << bit);
+            }
+            const uint128_t high = static_cast<uint128_t>(hi_lo) | (static_cast<uint128_t>(hi_hi) << 64);
+            return uint256_t(lo, mid, high);
+        }
+
         //! Swap method
         void swap(sd_vector& v)
         {
