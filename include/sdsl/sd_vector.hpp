@@ -27,6 +27,8 @@
 #include "select_support_mcl.hpp"
 #include "util.hpp"
 #include "iterators.hpp"
+#include "uint128_t.hpp"
+#include "uint256_t.hpp"
 
 //! Namespace for the succinct data structure library
 namespace sdsl
@@ -356,6 +358,41 @@ class sd_vector
                     }
                 }
             }
+        }
+
+    private:
+        template<typename T>
+        T extract_bits(size_type idx, uint8_t len) const
+        {
+            assert(idx + len <= m_size);
+            T res = 0;
+            for (uint8_t bit = 0; bit < len; ++bit) {
+                res |= (static_cast<T>((*this)[idx + bit])) << bit;
+            }
+            return res;
+        }
+
+    public:
+        uint64_t get_uint64(size_type idx) const
+        {
+            return extract_bits<uint64_t>(idx, 64);
+        }
+
+        uint128_t get_uint128(size_type idx) const
+        {
+            const uint64_t lo = extract_bits<uint64_t>(idx, 64);
+            const uint64_t hi = extract_bits<uint64_t>(idx + 64, 64);
+            return static_cast<uint128_t>(lo) | (static_cast<uint128_t>(hi) << 64);
+        }
+
+        uint256_t get_uint256(size_type idx) const
+        {
+            const uint64_t lo = extract_bits<uint64_t>(idx, 64);
+            const uint64_t mid = extract_bits<uint64_t>(idx + 64, 64);
+            const uint64_t hi_lo = extract_bits<uint64_t>(idx + 128, 64);
+            const uint64_t hi_hi = extract_bits<uint64_t>(idx + 192, 64);
+            const uint128_t high = static_cast<uint128_t>(hi_lo) | (static_cast<uint128_t>(hi_hi) << 64);
+            return uint256_t(lo, mid, high);
         }
 
         //! Swap method
