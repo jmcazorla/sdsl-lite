@@ -23,6 +23,8 @@
 #ifndef INCLUDED_SDSL_SD_VECTOR
 #define INCLUDED_SDSL_SD_VECTOR
 
+#include <algorithm>
+
 #include "int_vector.hpp"
 #include "select_support_mcl.hpp"
 #include "util.hpp"
@@ -361,67 +363,33 @@ class sd_vector
         }
 
     private:
-        uint64_t extract_bits_fast_u64(size_type idx, size_type len) const
+        template<typename T>
+        T extract_bits_direct(size_type idx, size_type len) const
         {
             assert(idx + len <= m_size);
-            return get_int(idx, static_cast<uint8_t>(len));
-        }
-
-        uint128_t extract_bits_fast_u128(size_type idx, size_type len) const
-        {
-            assert(idx + len <= m_size);
-            uint64_t lo = 0;
-            uint64_t hi = 0;
-            size_type offset = 0;
-            while (offset < len) {
-                const size_type chunk_bits = (len - offset < 64) ? (len - offset) : 64;
-                const uint64_t chunk = get_int(idx + offset, static_cast<uint8_t>(chunk_bits));
-                if (offset < 64) {
-                    lo |= (chunk << static_cast<int>(offset));
-                } else {
-                    hi |= (chunk << static_cast<int>(offset - 64));
-                }
-                offset += chunk_bits;
+            T res = 0;
+            for (size_type done = 0; done < len; ) {
+                uint8_t chunk = static_cast<uint8_t>(std::min<size_type>(64, len - done));
+                res |= (static_cast<T>(get_int(idx + done, chunk)) << static_cast<int>(done));
+                done += chunk;
             }
-            return static_cast<uint128_t>(lo) | (static_cast<uint128_t>(hi) << 64);
-        }
-
-        uint256_t extract_bits_fast_u256(size_type idx, size_type len) const
-        {
-            assert(idx + len <= m_size);
-            uint64_t lo = 0;
-            uint64_t mid = 0;
-            uint128_t high = 0;
-            size_type offset = 0;
-            while (offset < len) {
-                const size_type chunk_bits = (len - offset < 64) ? (len - offset) : 64;
-                const uint64_t chunk = get_int(idx + offset, static_cast<uint8_t>(chunk_bits));
-                if (offset < 64) {
-                    lo |= (chunk << static_cast<int>(offset));
-                } else if (offset < 128) {
-                    mid |= (chunk << static_cast<int>(offset - 64));
-                } else {
-                    high |= (static_cast<uint128_t>(chunk) << static_cast<int>(offset - 128));
-                }
-                offset += chunk_bits;
-            }
-            return uint256_t(lo, mid, high);
+            return res;
         }
 
     public:
         uint64_t get_uint64(size_type idx) const
         {
-            return extract_bits_fast_u64(idx, 64);
+            return extract_bits_direct<uint64_t>(idx, 64);
         }
 
         uint128_t get_uint128(size_type idx) const
         {
-            return extract_bits_fast_u128(idx, 128);
+            return extract_bits_direct<uint128_t>(idx, 128);
         }
 
         uint256_t get_uint256(size_type idx) const
         {
-            return extract_bits_fast_u256(idx, 256);
+            return extract_bits_direct<uint256_t>(idx, 256);
         }
 
         //! Swap method

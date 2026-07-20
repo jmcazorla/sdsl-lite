@@ -99,6 +99,35 @@ TYPED_TEST(sd_vector_test, get_uint64_128_256_fast)
     ASSERT_EQ(expected_256, sdv.get_uint256(0));
 }
 
+TYPED_TEST(sd_vector_test, wide_extract_from_offset)
+{
+    bit_vector bv(320, 0);
+    const std::vector<size_t> ones = {5, 8, 9, 50, 64, 65, 66, 120, 121, 250, 319};
+    for (auto pos : ones) {
+        bv[pos] = 1;
+    }
+    TypeParam sdv(bv);
+
+    auto build_value = [](const bit_vector& bits, size_t start, size_t len) {
+        uint64_t value = 0;
+        for (size_t i = 0; i < len; ++i) {
+            if (start + i < bits.size() && bits[start + i]) {
+                value |= (uint64_t(1) << i);
+            }
+        }
+        return value;
+    };
+
+    const uint64_t expected_64 = build_value(bv, 8, 64);
+    const uint64_t expected_64_hi = build_value(bv, 72, 64);
+    const uint128_t expected_128 = static_cast<uint128_t>(expected_64) | (static_cast<uint128_t>(expected_64_hi) << 64);
+    const uint256_t expected_256(expected_64, expected_64_hi, static_cast<uint128_t>(0));
+
+    ASSERT_EQ(expected_64, sdv.get_uint64(8));
+    ASSERT_EQ(expected_128, sdv.get_uint128(8));
+    ASSERT_EQ(expected_256, sdv.get_uint256(8));
+}
+
 TYPED_TEST(sd_vector_test, builder_empty_constructor)
 {
     sd_vector_builder builder(BV_SIZE, 0UL);
