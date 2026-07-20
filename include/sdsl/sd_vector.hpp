@@ -360,49 +360,68 @@ class sd_vector
             }
         }
 
-        uint64_t get_uint64(size_type idx) const
+    private:
+        uint64_t extract_bits_fast_u64(size_type idx, size_type len) const
         {
-            assert(idx + 64 <= m_size);
-            uint64_t res = 0;
-            for (uint8_t bit = 0; bit < 64; ++bit) {
-                res |= (static_cast<uint64_t>((*this)[idx + bit])) << bit;
-            }
-            return res;
+            assert(idx + len <= m_size);
+            return get_int(idx, static_cast<uint8_t>(len));
         }
 
-        uint128_t get_uint128(size_type idx) const
+        uint128_t extract_bits_fast_u128(size_type idx, size_type len) const
         {
-            assert(idx + 128 <= m_size);
+            assert(idx + len <= m_size);
             uint64_t lo = 0;
             uint64_t hi = 0;
-            for (uint8_t bit = 0; bit < 64; ++bit) {
-                const auto b0 = static_cast<uint64_t>((*this)[idx + bit]);
-                const auto b1 = static_cast<uint64_t>((*this)[idx + 64 + bit]);
-                lo |= (b0 << bit);
-                hi |= (b1 << bit);
+            size_type offset = 0;
+            while (offset < len) {
+                const size_type chunk_bits = (len - offset < 64) ? (len - offset) : 64;
+                const uint64_t chunk = get_int(idx + offset, static_cast<uint8_t>(chunk_bits));
+                if (offset < 64) {
+                    lo |= (chunk << static_cast<int>(offset));
+                } else {
+                    hi |= (chunk << static_cast<int>(offset - 64));
+                }
+                offset += chunk_bits;
             }
             return static_cast<uint128_t>(lo) | (static_cast<uint128_t>(hi) << 64);
         }
 
-        uint256_t get_uint256(size_type idx) const
+        uint256_t extract_bits_fast_u256(size_type idx, size_type len) const
         {
-            assert(idx + 256 <= m_size);
+            assert(idx + len <= m_size);
             uint64_t lo = 0;
             uint64_t mid = 0;
-            uint64_t hi_lo = 0;
-            uint64_t hi_hi = 0;
-            for (uint8_t bit = 0; bit < 64; ++bit) {
-                const auto b0 = static_cast<uint64_t>((*this)[idx + bit]);
-                const auto b1 = static_cast<uint64_t>((*this)[idx + 64 + bit]);
-                const auto b2 = static_cast<uint64_t>((*this)[idx + 128 + bit]);
-                const auto b3 = static_cast<uint64_t>((*this)[idx + 192 + bit]);
-                lo |= (b0 << bit);
-                mid |= (b1 << bit);
-                hi_lo |= (b2 << bit);
-                hi_hi |= (b3 << bit);
+            uint128_t high = 0;
+            size_type offset = 0;
+            while (offset < len) {
+                const size_type chunk_bits = (len - offset < 64) ? (len - offset) : 64;
+                const uint64_t chunk = get_int(idx + offset, static_cast<uint8_t>(chunk_bits));
+                if (offset < 64) {
+                    lo |= (chunk << static_cast<int>(offset));
+                } else if (offset < 128) {
+                    mid |= (chunk << static_cast<int>(offset - 64));
+                } else {
+                    high |= (static_cast<uint128_t>(chunk) << static_cast<int>(offset - 128));
+                }
+                offset += chunk_bits;
             }
-            const uint128_t high = static_cast<uint128_t>(hi_lo) | (static_cast<uint128_t>(hi_hi) << 64);
             return uint256_t(lo, mid, high);
+        }
+
+    public:
+        uint64_t get_uint64(size_type idx) const
+        {
+            return extract_bits_fast_u64(idx, 64);
+        }
+
+        uint128_t get_uint128(size_type idx) const
+        {
+            return extract_bits_fast_u128(idx, 128);
+        }
+
+        uint256_t get_uint256(size_type idx) const
+        {
+            return extract_bits_fast_u256(idx, 256);
         }
 
         //! Swap method
