@@ -362,34 +362,30 @@ class sd_vector
             }
         }
 
-    private:
-        template<typename T>
-        T extract_bits_direct(size_type idx, size_type len) const
-        {
-            assert(idx + len <= m_size);
-            T res = 0;
-            for (size_type done = 0; done < len; ) {
-                uint8_t chunk = static_cast<uint8_t>(std::min<size_type>(64, len - done));
-                res |= (static_cast<T>(get_int(idx + done, chunk)) << static_cast<int>(done));
-                done += chunk;
-            }
-            return res;
-        }
-
     public:
         uint64_t get_uint64(size_type idx) const
         {
-            return extract_bits_direct<uint64_t>(idx, 64);
+            assert(idx + 64 <= m_size);
+            return get_int(idx, 64);
         }
 
         uint128_t get_uint128(size_type idx) const
         {
-            return extract_bits_direct<uint128_t>(idx, 128);
+            assert(idx + 128 <= m_size);
+            uint64_t lo = get_int(idx, 64);
+            uint64_t hi = get_int(idx + 64, 64);
+            return (static_cast<uint128_t>(hi) << 64) | static_cast<uint128_t>(lo);
         }
 
         uint256_t get_uint256(size_type idx) const
         {
-            return extract_bits_direct<uint256_t>(idx, 256);
+            assert(idx + 256 <= m_size);
+            uint64_t v0 = get_int(idx, 64);
+            uint64_t v1 = get_int(idx + 64, 64);
+            uint64_t v2 = get_int(idx + 128, 64);
+            uint64_t v3 = get_int(idx + 192, 64);
+            uint128_t high = (static_cast<uint128_t>(v3) << 64) | static_cast<uint128_t>(v2);
+            return uint256_t(v0, v1, high);
         }
 
         //! Swap method
