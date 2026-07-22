@@ -27,6 +27,8 @@
 #include "io.hpp"
 #include "config.hpp"
 #include "uintx_t.hpp"
+#include "uint128_t.hpp"
+#include "uint256_t.hpp"
 
 #include "memory_management.hpp"
 #include "ram_fs.hpp"
@@ -447,6 +449,20 @@ class int_vector
             \sa setInt, getBit, setBit
         */
         value_type get_int(size_type idx, const uint8_t len=64) const;
+
+        //! Get the 128 bits starting at position idx as an uint128_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+            \returns The 128-bit integer value of the binary string starting at position idx.
+            \sa get_int, get_uint256
+        */
+        uint128_t get_uint128(size_type idx) const;
+
+        //! Get the 256 bits starting at position idx as an uint256_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+            \returns The 256-bit integer value of the binary string starting at position idx.
+            \sa get_int, get_uint128
+        */
+        uint256_t get_uint256(size_type idx) const;
 
         //! Set the bits from position idx to idx+len-1 to the binary representation of integer x.
         /*! The bit at position idx represents the least significant bit(lsb), and the bit at
@@ -1345,6 +1361,52 @@ auto int_vector<t_width>::get_int(size_type idx, const uint8_t len)const -> valu
     }
 #endif
     return bits::read_int(m_data+(idx>>6), idx&0x3F, len);
+}
+
+template<uint8_t t_width>
+inline uint128_t int_vector<t_width>::get_uint128(size_type idx) const
+{
+#ifdef SDSL_DEBUG
+    if (idx+128 > m_size) {
+        throw std::out_of_range("OUT_OF_RANGE_ERROR: int_vector::get_uint128(size_type); idx+128 > size()!");
+    }
+#endif
+    const uint64_t w = idx >> 6;
+    const uint8_t offset = static_cast<uint8_t>(idx & 0x3F);
+    uint64_t v0, v1;
+    if (0 == offset) {
+        v0 = m_data[w];
+        v1 = m_data[w+1];
+    } else {
+        const uint64_t r0 = m_data[w], r1 = m_data[w+1], r2 = m_data[w+2];
+        v0 = (r0 >> offset) | (r1 << (64-offset));
+        v1 = (r1 >> offset) | (r2 << (64-offset));
+    }
+    return (static_cast<uint128_t>(v1) << 64) | static_cast<uint128_t>(v0);
+}
+
+template<uint8_t t_width>
+inline uint256_t int_vector<t_width>::get_uint256(size_type idx) const
+{
+#ifdef SDSL_DEBUG
+    if (idx+256 > m_size) {
+        throw std::out_of_range("OUT_OF_RANGE_ERROR: int_vector::get_uint256(size_type); idx+256 > size()!");
+    }
+#endif
+    const uint64_t w = idx >> 6;
+    const uint8_t offset = static_cast<uint8_t>(idx & 0x3F);
+    uint64_t v0, v1, v2, v3;
+    if (0 == offset) {
+        v0 = m_data[w]; v1 = m_data[w+1]; v2 = m_data[w+2]; v3 = m_data[w+3];
+    } else {
+        const uint64_t r0 = m_data[w], r1 = m_data[w+1], r2 = m_data[w+2], r3 = m_data[w+3], r4 = m_data[w+4];
+        v0 = (r0 >> offset) | (r1 << (64-offset));
+        v1 = (r1 >> offset) | (r2 << (64-offset));
+        v2 = (r2 >> offset) | (r3 << (64-offset));
+        v3 = (r3 >> offset) | (r4 << (64-offset));
+    }
+    const uint128_t high = (static_cast<uint128_t>(v3) << 64) | static_cast<uint128_t>(v2);
+    return uint256_t(v0, v1, high);
 }
 
 template<uint8_t t_width>
