@@ -450,6 +450,13 @@ class int_vector
         */
         value_type get_int(size_type idx, const uint8_t len=64) const;
 
+        //! Get the 64 bits starting at position idx as an uint64_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+            \returns The 64-bit integer value of the binary string starting at position idx.
+            \sa get_int, get_uint128, get_uint256
+        */
+        uint64_t get_uint64(size_type idx) const;
+
         //! Get the 128 bits starting at position idx as an uint128_t.
         /*! \param idx Starting index of the binary representation of the integer.
             \returns The 128-bit integer value of the binary string starting at position idx.
@@ -1361,6 +1368,12 @@ auto int_vector<t_width>::get_int(size_type idx, const uint8_t len)const -> valu
     }
 #endif
     return bits::read_int(m_data+(idx>>6), idx&0x3F, len);
+}
+
+template<uint8_t t_width>
+inline uint64_t int_vector<t_width>::get_uint64(size_type idx) const
+{
+    return get_int(idx, 64);
 }
 
 template<uint8_t t_width>
