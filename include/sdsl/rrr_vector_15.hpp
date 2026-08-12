@@ -27,6 +27,8 @@
 #include "rrr_helper.hpp" // for binomial helper class
 #include "rrr_vector.hpp"
 #include "iterators.hpp"
+#include "uint128_t.hpp"
+#include "uint256_t.hpp"
 #include <vector>
 #include <algorithm> // for next_permutation
 #include <iostream>
@@ -346,6 +348,43 @@ class rrr_vector<15, t_rac, t_k>
                 } while (len > 0);
             }
             return res;
+        }
+
+        //! Get the 64 bits starting at position idx as an uint64_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+         *  \returns The 64-bit integer value of the binary string starting at position idx.
+         *  \sa get_int, get_uint128, get_uint256
+         */
+        uint64_t get_uint64(size_type idx) const
+        {
+            return get_int(idx, 64);
+        }
+
+        //! Get the 128 bits starting at position idx as an uint128_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+         *  \returns The 128-bit integer value of the binary string starting at position idx.
+         *  \sa get_int, get_uint64, get_uint256
+         */
+        uint128_t get_uint128(size_type idx) const
+        {
+            uint64_t lo = get_int(idx, 64);
+            uint64_t hi = get_int(idx + 64, 64);
+            return (static_cast<uint128_t>(hi) << 64) | static_cast<uint128_t>(lo);
+        }
+
+        //! Get the 256 bits starting at position idx as an uint256_t.
+        /*! \param idx Starting index of the binary representation of the integer.
+         *  \returns The 256-bit integer value of the binary string starting at position idx.
+         *  \sa get_int, get_uint64, get_uint128
+         */
+        uint256_t get_uint256(size_type idx) const
+        {
+            uint64_t v0 = get_int(idx, 64);
+            uint64_t v1 = get_int(idx + 64, 64);
+            uint64_t v2 = get_int(idx + 128, 64);
+            uint64_t v3 = get_int(idx + 192, 64);
+            uint128_t high = (static_cast<uint128_t>(v3) << 64) | static_cast<uint128_t>(v2);
+            return uint256_t(v0, v1, high);
         }
 
 
